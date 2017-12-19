@@ -2,6 +2,8 @@ package fr.ensim.Synchroniseur;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -18,16 +20,16 @@ public class Client extends Gestionnaire {
 	BufferedReader inputStream, inputUser;
 	PrintStream outputStream;
 	String line;
-	List <File> metadata;
+	File metadata;
 	Options options;
 	String repertoireDist;
 	String repertoireLocal;
 	
-	 Client (String [ ] args){
+	 Client (){
 		 
 		 options = parseOptions();
-		 repertoireDist = args[3];
-		 repertoireLocal = args[2];
+		 repertoireDist = "args[3]";
+		 repertoireLocal = "args[2]";
 		 
 		 try {
 		
@@ -57,13 +59,25 @@ public class Client extends Gestionnaire {
 			
 			
 			
-			do {
+			//do {
 				
-				
-				line = inputUser.readLine();
-				outputStream.println(line);
-				System.out.println(inputStream.readLine());
-			}while(!line.equals("STOP"));
+				/*
+				try {
+					c.line = c.inputUser.readLine();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}*/
+				/*c.outputStream.println(c.line);
+				try {
+					System.out.println(c.inputStream.readLine());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				*/
+				c.envoiMetadata("testClient");
+			//}while(!c.line.equals("STOP"));
 			
 			
 	
@@ -72,7 +86,22 @@ public class Client extends Gestionnaire {
 	}
 	
 	
-	private void envoiMetadata (){
+	private void envoiMetadata (String path){
+		
+		 	try {
+				transfert(
+				        new FileInputStream(path),
+				        socket.getOutputStream(),
+				        true);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	        
+		
 		
 		
 		
