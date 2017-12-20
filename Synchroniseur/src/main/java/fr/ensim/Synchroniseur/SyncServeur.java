@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,6 +19,9 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	private static int listenPort = 8080;
 	private Socket clientSocket;
 	static private int compteur = 0;
+	
+
+	File metadataClient = null;
 	
 	synchronized public int getCompteur() {
 		return compteur;
@@ -52,9 +57,9 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 				line = in.readLine();
 				out.println(line);
 				*/
-				receptionMetadata();
+				//receptionMetadata();
+				receptMetaObject();
 				
-			
 				
 			//}
 			clientSocket.close();
@@ -66,34 +71,72 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 		
 	}
 	
+	public void receptMetaObject() {
+		//Ajouter recepetion option
+		try {
+			InputStream is = clientSocket.getInputStream();
+			ObjectInputStream ois = new ObjectInputStream(is);
+			File metadata = (File) ois.readObject();
+			if (metadata!=null) { //Si meta est pas null, on a bien un truc :D
+				listFilesForFolder(metadata, 0);
+				//TODO appeler fonction pour traiter les metadata en fonction de l'option
+				//		créer les dossier dont on a besoin -> return metadata qu'on veut récuperer
+				//TODO envoyer metadata qu'on veut récuperer
+				//TODO reception fichier 1 par 1 (avec transfert)
+			}
+			is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void receptionMetadata () {
-		
-		
-		
 		 try {
-			
+		
 			transfert(
 			            clientSocket.getInputStream(),
-			            new FileOutputStream("test"),
+			            new FileOutputStream(metadataClient),
 			            true);
 			
-			File file = new File ("test");
-			System.out.println(file.lastModified());
+			
+	//		File file = new File ("test.txt");
+			System.out.println("Derniere modification  :  " + metadataClient.lastModified());
+			System.out.println("Chemin absolue : " + metadataClient.getAbsolutePath());
+			System.out.println("Taille de du fichier :  "+ metadataClient.length());
+			//File directory = new File ("testClient");
+			//listFilesForFolder(directory, 0);
 		
+			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-	        
-	
-		
+		}		
 	}
 	
 	
+	public void listFilesForFolder(final File folder, int arbre) {
+	    for (final File fileEntry : folder.listFiles()) {
+        	printTab(arbre);
+	        if (fileEntry.isDirectory()) {
+	            System.out.println(fileEntry.getName());
+	            listFilesForFolder(fileEntry,arbre+1);
+	        } else {
+	            System.out.println(fileEntry.getName());
+	        }
+	    }
+	}
+	
+	private void printTab(int arbre) {
+		for(int i = 0; i < arbre; i++) {
+			System.out.print("\t");
+		}
+		return;
+	}
 	public static void main(String[] args) {
 		ServerSocket listenSocket;
 		try {

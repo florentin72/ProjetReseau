@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
@@ -24,15 +26,15 @@ public class Client extends Gestionnaire {
 	File metadata;
 	Options options;
 	String repertoireDist;
-	String repertoireLocal;
+	static String repertoireLocal;
 	String serverName;
 	int port;
 	
 	 Client (String [ ] args) {
 		 options = parseOptions(args);
-		 System.out.println(options);
+		
 		 try {
-		 	socket = new Socket(InetAddress.getByName("127.0.0.1"), 8080);
+		 	socket = new Socket(serverName, port);
 			inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			outputStream = new PrintStream(socket.getOutputStream());
 			inputUser = new BufferedReader(new InputStreamReader(System.in));
@@ -46,16 +48,8 @@ public class Client extends Gestionnaire {
 	
 
 	public static void main(String[] args) {
-	
+		Client c = new Client (args);
 		
-		
-		Client c = new Client ();
-		
-		
-			
-			
-			
-			
 			//do {
 				
 				/*
@@ -73,17 +67,38 @@ public class Client extends Gestionnaire {
 					e.printStackTrace();
 				}
 				*/
-				c.envoiMetadata("testClient");
+				c.envoimetadata(repertoireLocal);
+				//c.envoiFichier(repertoireLocal);
+				//File folder = new File (repertoireLocal);	
+				//c.sendListFilesForFolder(folder);	
+				c.closeConnection();
 			//}while(!c.line.equals("STOP"));
 			
-			c.closeConnection();
+			/*
 			} catch(IOException e) {
 				e.printStackTrace();
-			}
+			}*/
+}
+	
+	
+	private void envoimetadata(String repertoireLocal) {
+		try {
+			OutputStream os = socket.getOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(os);
+			File metadata = new File (repertoireLocal); //metadata = repertoire local + tout ses enfants
+			oos.writeObject(metadata);
+			oos.close();
+			os.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return;
+		
 	}
-	
-	
-	private void envoiMetadata (String path){
+
+
+
+	private void envoiFichier (String path){
 		
 		 	try {
 				transfert(
@@ -115,6 +130,24 @@ public class Client extends Gestionnaire {
 		}
 	}
 	
+	
+	public void sendListFilesForFolder(final File folder) {
+		if (folder.isDirectory()) {
+		    for (final File fileEntry : folder.listFiles()) {
+		        if (fileEntry.isDirectory()) {
+		        	
+		            System.out.println(fileEntry.getName());
+		            sendListFilesForFolder(fileEntry);
+		        } else {
+		        	
+		            System.out.println(fileEntry.getName());
+		            this.envoiFichier(fileEntry.getAbsolutePath());
+		        }
+	    	}
+	    } else {
+	    	envoiFichier(folder.getAbsolutePath());
+	    }
+	}
 	
 	private Options parseOptions (String[] args) {
 		int nbArgs = args.length;

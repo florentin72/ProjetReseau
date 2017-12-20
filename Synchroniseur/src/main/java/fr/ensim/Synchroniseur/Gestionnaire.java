@@ -10,7 +10,7 @@ public class Gestionnaire {
 	
 	   public static void transfert(InputStream in, OutputStream out, boolean closeOnExit) throws IOException
 	    {
-	        byte buf[] = new byte[1024];
+	        byte buf[] = new byte[4096];
 	        
 	        int n;
 	        while((n=in.read(buf)) !=-1)
