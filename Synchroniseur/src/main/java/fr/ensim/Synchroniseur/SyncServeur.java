@@ -19,8 +19,8 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	private static int listenPort = 8080;
 	private Socket clientSocket;
 	static private int compteur = 0;
-	
-
+	File metadata;
+	Options optionClient;
 	File metadataClient = null;
 	
 	synchronized public int getCompteur() {
@@ -76,7 +76,7 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 		try {
 			InputStream is = clientSocket.getInputStream();
 			ObjectInputStream ois = new ObjectInputStream(is);
-			File metadata = (File) ois.readObject();
+			 metadata = (File) ois.readObject();
 			if (metadata!=null) { //Si meta est pas null, on a bien un truc :D
 				listFilesForFolder(metadata, 0);
 				//TODO appeler fonction pour traiter les metadata en fonction de l'option
@@ -102,9 +102,7 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 			
 			
 	//		File file = new File ("test.txt");
-			System.out.println("Derniere modification  :  " + metadataClient.lastModified());
-			System.out.println("Chemin absolue : " + metadataClient.getAbsolutePath());
-			System.out.println("Taille de du fichier :  "+ metadataClient.length());
+			
 			//File directory = new File ("testClient");
 			//listFilesForFolder(directory, 0);
 		
@@ -118,6 +116,47 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 		}		
 	}
 	
+	
+	
+	public void traitementMetadata() {
+		
+		switch (optionClient) {
+		case es:
+			
+			break;
+			
+		case e:
+			
+			break;
+		case w:
+			
+			break;
+			
+		case ws:
+			
+			break;
+		case wes:
+			
+			break;
+		case s:
+			
+			break;
+			
+		case we:
+			
+			break;
+			
+		default:
+			break;
+		}
+		
+		
+		
+		
+		
+		
+		
+	}
 	
 	public void listFilesForFolder(final File folder, int arbre) {
 	    for (final File fileEntry : folder.listFiles()) {
