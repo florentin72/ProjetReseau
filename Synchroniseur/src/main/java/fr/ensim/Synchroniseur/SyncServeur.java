@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import junit.framework.Test;
 
@@ -78,6 +79,7 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 			ObjectInputStream ois = new ObjectInputStream(is);
 			 metadata = (File) ois.readObject();
 			if (metadata!=null) { //Si meta est pas null, on a bien un truc :D
+			
 				listFilesForFolder(metadata, 0);
 				//TODO appeler fonction pour traiter les metadata en fonction de l'option
 				//		créer les dossier dont on a besoin -> return metadata qu'on veut récuperer
@@ -117,15 +119,56 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	}
 	
 	
-	
-	public void traitementMetadata() {
+	/**
+	 * 
+	 * 
+	 * @param dest
+	 * repertoire destination
+	 */
+	public ArrayList <File> traitementMetadata(File dest) {
 		
+		ArrayList<File> demandeFile = new ArrayList<File>(); 
+		if (dest == null ) {
+			demandeFile.add(metadata);
+			return demandeFile;
+			
+		}
+		else {
 		switch (optionClient) {
 		case es:
-			
+		
 			break;
 			
 		case e:
+			 for (final File fileEntry : metadata.listFiles() ) {
+				 
+			        if (fileEntry.isDirectory()) {
+			        	for (File f : dest.listFiles()) {
+			        		
+			        		if (fileEntry.exists()) {
+			        			
+			        				
+			        		}
+			        		
+			        	}
+			           
+			        	
+			        	
+			        	
+			            listFilesForFolder(fileEntry,0);
+			        } else {
+			        	
+			        	
+			            System.out.println(fileEntry.getName());
+			            
+			            
+			            
+			            
+			        }
+			    }
+			
+			
+			
 			
 			break;
 		case w:
@@ -149,6 +192,9 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 		default:
 			break;
 		}
+		return demandeFile;
+		}
+		
 		
 		
 		
@@ -162,6 +208,13 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	    for (final File fileEntry : folder.listFiles()) {
         	printTab(arbre);
 	        if (fileEntry.isDirectory()) {
+	        	
+	        	/* on creer un nouveau fichier en rajoutant la destinationau chemin*/
+	        	File fileSend = new File ("Serveur/"+fileEntry.getPath());
+	        	System.out.println(fileSend.getAbsolutePath());
+	        	
+	        	/* on creer le dossier au bonne endroit*/
+	        	fileSend.mkdirs();
 	            System.out.println(fileEntry.getName());
 	            listFilesForFolder(fileEntry,arbre+1);
 	        } else {
