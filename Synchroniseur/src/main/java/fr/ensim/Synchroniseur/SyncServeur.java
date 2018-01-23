@@ -13,7 +13,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import junit.framework.Test;
+//import junit.framework.Test;
 
 public class SyncServeur extends Gestionnaire implements Runnable {
 	
@@ -22,7 +22,7 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	static private int compteur = 0;
 	File metadata;
 	Options optionClient;
-	File metadataClient = null;
+	File metadataClient = new File ("Client");
 	
 	synchronized public int getCompteur() {
 		return compteur;
@@ -58,9 +58,9 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 				line = in.readLine();
 				out.println(line);
 				*/
-				//receptionMetadata();
-				receptMetaObject();
 				
+				receptMetaObject();
+				//receptionMetadata();
 				
 			//}
 			clientSocket.close();
@@ -81,10 +81,12 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 			if (metadata!=null) { //Si meta est pas null, on a bien un truc :D
 			
 				listFilesForFolder(metadata, 0);
+				//receptionMetadata();
 				//TODO appeler fonction pour traiter les metadata en fonction de l'option
 				//		créer les dossier dont on a besoin -> return metadata qu'on veut récuperer
 				//TODO envoyer metadata qu'on veut récuperer
 				//TODO reception fichier 1 par 1 (avec transfert)
+				
 			}
 			is.close();
 		} catch (IOException e) {
@@ -92,7 +94,11 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+		
+		
+		
 	}
+	
 	
 	public void receptionMetadata () {
 		 try {
@@ -103,17 +109,17 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 			            true);
 			
 			
-	//		File file = new File ("test.txt");
+			
+			listFilesForFolder(metadataClient, 0);
+			//File file = new File ("test.txt");
 			
 			//File directory = new File ("testClient");
 			//listFilesForFolder(directory, 0);
 		
 			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
@@ -218,6 +224,8 @@ public class SyncServeur extends Gestionnaire implements Runnable {
 	            System.out.println(fileEntry.getName());
 	            listFilesForFolder(fileEntry,arbre+1);
 	        } else {
+	        	//System.out.println("JE SUIS LA !!!!!!!!!!!!");
+	         	File fileSend = new File ("Serveur/"+fileEntry.getPath());
 	            System.out.println(fileEntry.getName());
 	        }
 	    }

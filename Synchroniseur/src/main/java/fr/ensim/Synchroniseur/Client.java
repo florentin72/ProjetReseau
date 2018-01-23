@@ -68,6 +68,24 @@ public class Client extends Gestionnaire {
 				}
 				*/
 				c.envoimetadata(repertoireLocal);
+				File repLoc = new File ( repertoireLocal);
+				  for (final File fileEntry : repLoc.listFiles()) {
+			        
+				        if (fileEntry.isDirectory()) {
+			
+				        	
+				        	
+				        	
+				       
+				        } else {
+				        	c.envoiFichier(fileEntry.getPath());
+				            System.out.println(fileEntry.getName());
+				        }
+					
+					
+					
+					
+				}
 				//c.envoiFichier(repertoireLocal);
 				//File folder = new File (repertoireLocal);	
 				//c.sendListFilesForFolder(folder);	
@@ -106,10 +124,9 @@ public class Client extends Gestionnaire {
 				        socket.getOutputStream(),
 				        true);
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				// 
 				e.printStackTrace();
 			}
 	        
