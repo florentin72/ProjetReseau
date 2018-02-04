@@ -5,13 +5,13 @@ public enum Options {
 	defaut, w, e, s, we, ws, es, wes;
 
 	public Options ajouter(Options o) {
-		if(o.equals(Options.defaut)) { //Si on demande à ajouter l'option par défaut
+		if(o.equals(Options.defaut)) { //Si on demande Ã  ajouter l'option par dÃ©faut
 			return this;
 		}
 			
 		switch(this) {
 		case defaut: //Si on avait pas d'options
-			return o; // On prend l'option demandée
+			return o; // On prend l'option demandÃ©e
 			
 		case w:
 			switch(o) {

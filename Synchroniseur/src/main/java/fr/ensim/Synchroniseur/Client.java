@@ -1,172 +1,101 @@
 package fr.ensim.Synchroniseur;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.cert.PKIXRevocationChecker.Option;
-import java.util.List;
 
 public class Client extends Gestionnaire {
-	
-	
-	Socket socket;
-	BufferedReader inputStream, inputUser;
-	PrintStream outputStream;
-	String line;
-	File metadata;
-	Options options;
-	String repertoireDist;
-	static String repertoireLocal;
-	String serverName;
 	int port;
+	String serverName;
 	
-	 Client (String [ ] args) {
-		 options = parseOptions(args);
-		
-		 try {
-		 	socket = new Socket(serverName, port);
-			inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			outputStream = new PrintStream(socket.getOutputStream());
-			inputUser = new BufferedReader(new InputStreamReader(System.in));
+	Client(String [] args) {
+		options = parseOptions(args);
+		metaDataSource = new MyFile(repertoireSource);
+		try {
+			socket = new Socket(serverName, port);
+			inputStream = socket.getInputStream();
+			outputStream = socket.getOutputStream();
+			oos = new ObjectOutputStream(outputStream);
+			ois = new ObjectInputStream(inputStream);
 		} catch (UnknownHostException e) {
 			System.err.println(e);
 		} catch (IOException e) {
 			System.err.println(e);
 		}
 	}
-	
-	
-
-	public static void main(String[] args) {
-		Client c = new Client (args);
-		
-			//do {
-				
-				/*
-				try {
-					c.line = c.inputUser.readLine();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}*/
-				/*c.outputStream.println(c.line);
-				try {
-					System.out.println(c.inputStream.readLine());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				*/
-				c.envoimetadata(repertoireLocal);
-				File repLoc = new File ( repertoireLocal);
-				  for (final File fileEntry : repLoc.listFiles()) {
-			        
-				        if (fileEntry.isDirectory()) {
-			
-				        	
-				        	
-				        	
-				       
-				        } else {
-				        	c.envoiFichier(fileEntry.getPath());
-				            System.out.println(fileEntry.getName());
-				        }
-					
-					
-					
-					
-				}
-				//c.envoiFichier(repertoireLocal);
-				//File folder = new File (repertoireLocal);	
-				//c.sendListFilesForFolder(folder);	
-				c.closeConnection();
-			//}while(!c.line.equals("STOP"));
-			
-			/*
-			} catch(IOException e) {
-				e.printStackTrace();
-			}*/
-}
-	
-	
-	private void envoimetadata(String repertoireLocal) {
+	protected boolean envoiOK(MyFile metaData) {
 		try {
-			OutputStream os = socket.getOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(os);
-			File metadata = new File (repertoireLocal); //metadata = repertoire local + tout ses enfants
-			oos.writeObject(metadata);
-			oos.close();
-			os.close();
+			oos.writeObject(metaData.exists());
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println(e);
+		}
+		return metaDataSource.exists();
+	}
+	protected void envoieRepertoires(String repertoireSrc, String repertoireDest) {
+		try {
+			System.out.println("Envoi des repertoires ...");
+			oos.writeObject(repertoireSrc);
+			System.out.println("Repertoire source envoye !");
+			oos.writeObject(repertoireDest);
+			System.out.println("Repertoire dest envoye !");
+		} catch (IOException e) {
+			System.err.println(e);
 		}
 		return;
-		
 	}
-
-
-
-	private void envoiFichier (String path){
-		
-		 	try {
-				transfert(
-				        new FileInputStream(path),
-				        socket.getOutputStream(),
-				        true);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				// 
-				e.printStackTrace();
-			}
-	        
-		
-		
-		
-		
-		
-	}
-	
-	
-	private void closeConnection () {
+	protected void envoiMetaDataSource(MyFile metaDataSource) {
 		try {
-			socket.close();
+			System.out.println("Envoi des metaDataSource ...");
+			oos.writeObject(metaDataSource);
+			System.out.println("MetaData envoyees !");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println(e);
 		}
+		return;
+	}
+	protected void envoiOptions() {
+		try {
+			System.out.println("Envoi des options ...");
+			oos.writeObject(options);
+			System.out.println("Options envoyees !");
+		} catch (IOException e) {
+			System.err.println(e);
+		}
+		return;
 	}
 	
-	
-	public void sendListFilesForFolder(final File folder) {
-		if (folder.isDirectory()) {
-		    for (final File fileEntry : folder.listFiles()) {
-		        if (fileEntry.isDirectory()) {
-		        	
-		            System.out.println(fileEntry.getName());
-		            sendListFilesForFolder(fileEntry);
-		        } else {
-		        	
-		            System.out.println(fileEntry.getName());
-		            this.envoiFichier(fileEntry.getAbsolutePath());
-		        }
-	    	}
-	    } else {
-	    	envoiFichier(folder.getAbsolutePath());
-	    }
+	protected void envoiFichiers() {
+		receptMetaFileToSend();
+		while(metaFileToSend.exists()) { //Tant qu'on reçoit des pathName à envoyer
+			System.out.println("Fichier à envoyer : " + metaFileToSend.getAbsolutePath());
+			//envoyer le fichier correspondant
+			try {
+				FileInputStream FileIS = new FileInputStream(metaFileToSend.getAbsolutePath());
+				transfert(FileIS, outputStream, metaFileToSend.length());
+				FileIS.close();
+				System.out.println("Fichier envoyé !");
+			} catch (IOException e) {
+				System.err.println(e);
+			}
+			receptMetaFileToSend();
+		}
+		System.out.println("Fin de la transmition.");
+	}
+	protected void receptMetaFileToSend() {
+		try {
+			metaFileToSend = (MyFile) ois.readObject();
+		} catch (IOException e) {
+			System.err.println(e);
+		} catch (ClassNotFoundException e) {
+			System.err.println(e);
+		}
+		return;
 	}
 	
-	private Options parseOptions (String[] args) {
+	protected Options parseOptions (String[] args) {
 		int nbArgs = args.length;
 		options = Options.defaut;
 		if(nbArgs < 3) {
@@ -175,8 +104,8 @@ public class Client extends Gestionnaire {
 
 			serverName = args[0].substring(0, args[0].indexOf(':'));
 			port = Integer.parseInt(args[0].substring(args[0].indexOf(':')+1, args[0].length()));
-			repertoireLocal = args[1];
-			repertoireDist = args[2];
+			repertoireSource = args[1];
+			repertoireCible = args[2];
 			
 			for(int i = 3; i < nbArgs; i++) {
 				if(args[i].indexOf('-') == 0) { //Si le paramètre à une option
@@ -211,5 +140,4 @@ public class Client extends Gestionnaire {
 		}
 		return options;
 	}
-	
 }
